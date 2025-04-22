@@ -8,7 +8,7 @@ import dao.KhachHangDAO;
 import java.util.ArrayList;
 import model.KhachHang;
 
-
+//
 public class SearchKhachHang {
 
     public static SearchKhachHang getInstance() {
