@@ -5,6 +5,7 @@ package controller;
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
 
+//
 
 public class BCrypt {
 	// BCrypt parameters
