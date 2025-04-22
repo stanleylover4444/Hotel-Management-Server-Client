@@ -108,4 +108,3 @@ CREATE TABLE ChiTietHoaDonPhong (
   `maPhong` varchar(50) NOT NULL,
   `donGia` double DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
