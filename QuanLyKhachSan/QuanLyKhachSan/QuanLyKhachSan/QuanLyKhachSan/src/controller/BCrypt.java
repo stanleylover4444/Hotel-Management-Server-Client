@@ -6,7 +6,8 @@ import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
 
 //
-
+//
+//
 public class BCrypt {
 	// BCrypt parameters
 	private static final int GENSALT_DEFAULT_LOG2_ROUNDS = 10;
