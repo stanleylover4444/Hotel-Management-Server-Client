@@ -26,7 +26,7 @@ import org.jfree.util.PublicCloneable;
 import dao2.BookRoomDAO;
 import dao2.OrderDAO;
 import dao2.ServiceDetailDAO;
-////
+//
 public class GD_ThongKe extends javax.swing.JInternalFrame {
     private final OrderDAO odDAO = new OrderDAO();
     private final BookRoomDAO brDAO = new BookRoomDAO();
