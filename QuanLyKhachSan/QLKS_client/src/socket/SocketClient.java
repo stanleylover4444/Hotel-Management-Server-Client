@@ -191,6 +191,7 @@ public class SocketClient {
     
     /*
      * Ready for use.
+     * 
      */
     public void close() {
         try {

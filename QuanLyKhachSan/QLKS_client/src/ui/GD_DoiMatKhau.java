@@ -6,7 +6,7 @@ import javax.swing.JOptionPane;
 import dao2.AccountDAO;
 
 public class GD_DoiMatKhau extends javax.swing.JFrame {
-
+//
     String username;
 
     private dao2.AccountDAO aD;
@@ -16,7 +16,7 @@ public class GD_DoiMatKhau extends javax.swing.JFrame {
         this.setAlwaysOnTop(true);
         initComponents();
         aD = new AccountDAO();
-    }
+    }//
 
     @SuppressWarnings("unchecked")
     private void initComponents() {

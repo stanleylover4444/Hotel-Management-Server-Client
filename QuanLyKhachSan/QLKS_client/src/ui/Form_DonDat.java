@@ -42,7 +42,7 @@ public class Form_DonDat extends javax.swing.JFrame {
 
     @SuppressWarnings("unchecked")
     private void initComponents() {
-
+//
         jPanel3 = new javax.swing.JPanel();
         pnlHoaDon = new javax.swing.JPanel();
         pblTren = new javax.swing.JPanel();
