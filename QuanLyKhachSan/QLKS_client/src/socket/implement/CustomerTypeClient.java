@@ -43,3 +43,4 @@ public class CustomerTypeClient implements ICustomerType{
     }
 
 }
+//checklai
