@@ -1,5 +1,6 @@
 package entity;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
@@ -16,8 +17,13 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "Customer")
-public class Customer {
-    @Id
+public class Customer implements Serializable {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@Id
     @Column(name = "customerID")
     private String customerID;
 

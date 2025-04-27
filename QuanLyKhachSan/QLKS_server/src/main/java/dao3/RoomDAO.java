@@ -4,6 +4,8 @@ import entity.Room;
 import entity.RoomStatusType;
 import entity.RoomType;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+
 import java.util.List;
 
 public class RoomDAO {
@@ -80,6 +82,32 @@ public class RoomDAO {
             e.printStackTrace();
             entityManager.getTransaction().rollback();
         }
+    }
+
+    public List<Room> searchRooms(String roomId, String roomType, String roomStatus) {
+        String query = "SELECT r FROM Room r WHERE 1=1";
+        if (roomId != null && !roomId.isEmpty()) {
+            query += " AND r.roomID = :roomId";
+        }
+        if (roomType != null && !roomType.isEmpty()) {
+            query += " AND r.roomType.roomTypeID = :roomType";
+        }
+        if (roomStatus != null && !roomStatus.isEmpty()) {
+            query += " AND r.roomStatusType.roomStatusTypeID = :roomStatus";
+        }
+
+        TypedQuery<Room> q = entityManager.createQuery(query, Room.class);
+        if (roomId != null && !roomId.isEmpty()) {
+            q.setParameter("roomId", roomId);
+        }
+        if (roomType != null && !roomType.isEmpty()) {
+            q.setParameter("roomType", roomType);
+        }
+        if (roomStatus != null && !roomStatus.isEmpty()) {
+            q.setParameter("roomStatus", roomStatus);
+        }
+
+        return q.getResultList();
     }
 
     // Helper method for generating room ID

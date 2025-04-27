@@ -9,12 +9,14 @@ import javax.swing.RowFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
-import dao2.AccountDAO;
+import socket.implement.AccountClient;
+import entity.Account;
 
 public class GD_TaiKhoan extends javax.swing.JInternalFrame {
     private String username;
-    private dao2.AccountDAO aD ;
+    private AccountClient accountClient;
     private DefaultTableModel modelTaiKhoan;
+
     public GD_TaiKhoan(String _username) {
         this.setRootPaneCheckingEnabled(false);
         javax.swing.plaf.InternalFrameUI ui
@@ -23,17 +25,16 @@ public class GD_TaiKhoan extends javax.swing.JInternalFrame {
         initComponents();
         this.setFocusable(true);
         username=_username;
-  
+        accountClient = new AccountClient();
         modelTaiKhoan=(DefaultTableModel)tblTaiKhoan.getModel();
         DocDuLieuLenTable();
     }
-    private void DocDuLieuLenTable(){
-        aD = new AccountDAO();
-        List<entity.Account> list =aD.getAllListAccount();
+
+    private void DocDuLieuLenTable() {
+        List<Account> list = accountClient.getAll();
         modelTaiKhoan.setRowCount(0);
-        for (entity.Account a : list) {
-            modelTaiKhoan.addRow(new Object[]{
-                a.getUserName(),a.getPassword()});
+        for (Account a : list) {
+            modelTaiKhoan.addRow(new Object[]{a.getUserName(), a.getPassword()});
         }
     }
 
@@ -259,54 +260,58 @@ public class GD_TaiKhoan extends javax.swing.JInternalFrame {
 
     private void btnXoaTKActionPerformed(java.awt.event.ActionEvent evt) {
         int index = tblTaiKhoan.getSelectedRow();
-        if (index==-1){
+        if (index == -1) {
             JOptionPane.showMessageDialog(this, "Hãy chọn tài khoản cần xóa!");
-        }else{
-            int chon= JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa tài khoản này?", "Há»�i",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);
-            if(chon==JOptionPane.YES_OPTION){
-                aD.delete(aD.getAccountById(tblTaiKhoan.getValueAt(index, 0).toString()));
+        } else {
+            int chon = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa tài khoản này?", "Hỏi",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (chon == JOptionPane.YES_OPTION) {
+                String username = tblTaiKhoan.getValueAt(index, 0).toString();
+                if (accountClient.delete(username)) {
+                    DocDuLieuLenTable();
+                    JOptionPane.showMessageDialog(this, "Xóa thành công!");
+                    txtTenDN.setText("");
+                    txtMK.setText("");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Xóa thất bại!");
+                }
+            }
+        }
+    }
+
+    private void btnDatLaiMatKhauActionPerformed(java.awt.event.ActionEvent evt) {
+        int index = tblTaiKhoan.getSelectedRow();
+        if (index == -1) {
+            JOptionPane.showMessageDialog(this, "Hãy chọn tài khoản cần đặt lại mật khẩu!");
+        } else {
+            String username = modelTaiKhoan.getValueAt(index, 0).toString();
+            Account account = new Account(username, "123456");
+            if (accountClient.update(account)) {
                 DocDuLieuLenTable();
-                JOptionPane.showMessageDialog(this, "Xóa thành công!");
+                JOptionPane.showMessageDialog(this, "Đặt lại mật khẩu thành công!");
                 txtTenDN.setText("");
                 txtMK.setText("");
+            } else {
+                JOptionPane.showMessageDialog(this, "Đặt lại mật khẩu thất bại!");
             }
-            
-            }
-    } 
+        }
+    }
 
-    private void btnDatLaiMatKhauActionPerformed(java.awt.event.ActionEvent evt) { 
+    private void tblTaiKhoanMouseClicked(java.awt.event.MouseEvent evt) {
         int index = tblTaiKhoan.getSelectedRow();
-        if (index==-1){
-            JOptionPane.showMessageDialog(this, "Hãy chọn tài khoản cần đặt lại mật khẩu!");
-        }else{
-            aD.update("123456", modelTaiKhoan.getValueAt(index, 0)+"");
-            
-            DocDuLieuLenTable();
-            JOptionPane.showMessageDialog(this, "Đặt lại mật khẩu thành công!");
-            txtTenDN.setText("");
-            txtMK.setText("");
-            }
-        
-    } 
-
-    private void tblTaiKhoanMouseClicked(java.awt.event.MouseEvent evt) { 
-        int index=tblTaiKhoan.getSelectedRow();
         txtTenDN.setText(tblTaiKhoan.getValueAt(index, 0).toString());
         txtMK.setText(tblTaiKhoan.getValueAt(index, 1).toString());
-    } 
+    }
 
-    private void txtTimKiemKeyReleased(java.awt.event.KeyEvent evt) { 
-        String f= txtFind.getText();
+    private void txtTimKiemKeyReleased(java.awt.event.KeyEvent evt) {
+        String f = txtFind.getText();
         filter(f);
-    } 
+    }
 
-                                      
-    private void filter(String s){
-        TableRowSorter<DefaultTableModel> tr=new TableRowSorter<DefaultTableModel>(modelTaiKhoan);
+    private void filter(String s) {
+        TableRowSorter<DefaultTableModel> tr = new TableRowSorter<>(modelTaiKhoan);
         tblTaiKhoan.setRowSorter(tr);
-        tr.setRowFilter(RowFilter.regexFilter("(?i)"+s,0));
-
-        
+        tr.setRowFilter(RowFilter.regexFilter("(?i)" + s, 0));
     }
 
     private javax.swing.JButton btnDatLaiMatKhau;

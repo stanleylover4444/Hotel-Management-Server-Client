@@ -35,8 +35,15 @@ public class AccountClient implements IAccount{
     
     @Override
     public List<Account> getAll() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAll'");
+        try {
+            writer = new PrintWriter(new OutputStreamWriter(socketClient.getSocket().getOutputStream()), true);
+            writer.println("get_all_accounts");
+            in = new ObjectInputStream(socketClient.getSocket().getInputStream());
+            return (List<Account>) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -53,14 +60,31 @@ public class AccountClient implements IAccount{
 
     @Override
     public boolean update(Account obj) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'update'");
+        try {
+            writer = new PrintWriter(new OutputStreamWriter(socketClient.getSocket().getOutputStream()), true);
+            writer.println("update_account");
+            out = new ObjectOutputStream(socketClient.getSocket().getOutputStream());
+            out.writeObject(obj);
+            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream()));
+            return Boolean.parseBoolean(reader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public boolean delete(String id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'delete'");
+        try {
+            writer = new PrintWriter(new OutputStreamWriter(socketClient.getSocket().getOutputStream()), true);
+            writer.println("delete_account");
+            writer.println(id);
+            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream()));
+            return Boolean.parseBoolean(reader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override

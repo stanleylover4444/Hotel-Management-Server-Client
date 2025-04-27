@@ -52,7 +52,7 @@ public class Connection {
         }
     }
 
-    public void sendList(List<Room> list) throws IOException {
+    public void sendList(Object list) throws IOException {
         System.out.println("sendList: " + list.toString());
         try{
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());

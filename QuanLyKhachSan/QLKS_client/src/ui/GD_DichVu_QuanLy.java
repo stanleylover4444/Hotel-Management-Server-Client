@@ -1,9 +1,10 @@
-
 package ui;
 import entity.*;
 import socket.SocketClient;
+import socket.implement.ServiceClient;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -16,8 +17,7 @@ import dao.ServiceDAO;
 
 public class GD_DichVu_QuanLy extends javax.swing.JInternalFrame {
     private DefaultTableModel model;
-       
-    private ServiceDAO serviceD;
+    private ServiceClient serviceClient;
     private EmployeeDAO empD;
 
     private static SocketClient socketClient = new SocketClient("localhost", 31000);
@@ -30,30 +30,21 @@ public class GD_DichVu_QuanLy extends javax.swing.JInternalFrame {
         
         initComponents();
         model = new DefaultTableModel();
-        serviceD = new ServiceDAO();
-        // helper = new RegexHelper();
+        serviceClient = new ServiceClient();
         model = (DefaultTableModel) tbService.getModel();
         loadDataToTBService();        
     }
     
     private void loadDataToTBService() {
-        tbService.setModel(model);
-        
         model.setRowCount(0);
-        
-           try {
-               for(Service s : serviceD.getAllService())
-               {
-                   Object[] row = {
-                       s.getServiceID(),s.getServiceName(), s.getPrice(), s.getInventory()
-                   };
-                   model.addRow(row);
-               }  } catch (ClassNotFoundException ex) {
-               Logger.getLogger(GD_DichVu_QuanLy.class.getName()).log(Level.SEVERE, null, ex);
-           } catch (SQLException ex) {
-               Logger.getLogger(GD_DichVu_QuanLy.class.getName()).log(Level.SEVERE, null, ex);
-           }
-           model.fireTableDataChanged();
+        List<Service> services = serviceClient.getAllServices();
+        if (services != null) {
+            for (Service s : services) {
+                Object[] row = {s.getServiceID(), s.getServiceName(), s.getPrice(), s.getInventory()};
+                model.addRow(row);
+            }
+        }
+        model.fireTableDataChanged();
     }
                                    
 
@@ -67,16 +58,6 @@ public class GD_DichVu_QuanLy extends javax.swing.JInternalFrame {
         else
         {
             String thongBao="";
-            // if (!helper.regexPriceService(priceTF.getText().trim()))
-            //     thongBao+="*Giá phải là số và lớn hơn 0!\n";
-            // if(!helper.regexSoLuongTon(quantityTF.getText().trim()))
-            //     thongBao+="*Số lượng phải là số\n";
-            // if (thongBao.isEmpty())
-            //     return true;
-            // else{
-            //     JOptionPane.showMessageDialog(this, thongBao);
-            //     return false;
-            // }
             return false;
         }
     }
@@ -85,10 +66,8 @@ public class GD_DichVu_QuanLy extends javax.swing.JInternalFrame {
         String s="DV";
         int ma = 0;
         try {
-            ma = serviceD.getAllService().size();
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(GD_DichVu_QuanLy.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
+            ma = serviceClient.getAllServices().size();
+        } catch (Exception ex) {
             Logger.getLogger(GD_DichVu_QuanLy.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (ma<9)
@@ -402,26 +381,23 @@ public class GD_DichVu_QuanLy extends javax.swing.JInternalFrame {
     } 
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) { 
-        // TODO add your handling code here:
-                 if(checkData())
-        {
+        if (checkData()) {
             Service s = new Service(idService(), nameTF.getText(), Double.parseDouble(priceTF.getText()), Integer.parseInt(quantityTF.getText()));
-            if(serviceD.add(s))
-            {
+            if (serviceClient.addService(s)) {
                 JOptionPane.showMessageDialog(this, "Thêm thành công!");
                 clearText();
-                loadDataToTBService(); 
+                loadDataToTBService();
+            } else {
+                JOptionPane.showMessageDialog(this, "Thêm thất bại!");
             }
         }
     } 
 
     private void btnClearActionPerformed(java.awt.event.ActionEvent evt) { 
-        // TODO add your handling code here:
         clearText();
     } 
 
     private void tbServiceMouseClicked(java.awt.event.MouseEvent evt) {
-        // TODO add your handling code here:
         int index = tbService.getSelectedRow();
         nameTF.setText(tbService.getValueAt(index, 1).toString());
         priceTF.setText(tbService.getValueAt(index, 2).toString());
@@ -429,62 +405,45 @@ public class GD_DichVu_QuanLy extends javax.swing.JInternalFrame {
     } 
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) { 
-        // TODO add your handling code here:
         int index = tbService.getSelectedRow();
-        if(index == -1)
-        {
+        if (index == -1) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn sản phẩm muốn xóa!");
-        }
-        else
-        {
-            Service s = serviceD.findServiceByID(tbService.getValueAt(index, 0).toString());
-            if(JOptionPane.showConfirmDialog(this, "Bạn chắc chắn muốn xóa ?", "Cảnh báo", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION)
-            {
-                if(serviceD.delete(s))
-                {
+        } else {
+            String serviceID = tbService.getValueAt(index, 0).toString();
+            if (JOptionPane.showConfirmDialog(this, "Bạn chắc chắn muốn xóa?", "Cảnh báo", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                if (serviceClient.deleteService(serviceID)) {
                     JOptionPane.showMessageDialog(this, "Xóa thành công!");
                     clearText();
                     loadDataToTBService();
-                }
-                else
-                {
-                    JOptionPane.showMessageDialog(this, "Xóa không Thành công!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Xóa thất bại!");
                 }
             }
         }
     }
 
     private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {
-        // TODO add your handling code here:
         int index = tbService.getSelectedRow();
-        if(index == -1)
-        {
+        if (index == -1) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn sản phẩm muốn cập nhật!");
-        }
-        else
-        {
-            if(checkData())
-            {
-                Service s = serviceD.findServiceByID(tbService.getValueAt(index, 0).toString());
-                s.setServiceName(nameTF.getText());
-                s.setPrice(Double.parseDouble(priceTF.getText()));
-                s.setInventory(Integer.parseInt(quantityTF.getText()));
-                if(serviceD.update(s))
-                {
-                    JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
-                    clearText();
-                    loadDataToTBService();
-                }
-                else
-                {
-                    JOptionPane.showMessageDialog(this, "Cập nhật thất bại!");
-                }
+        } else if (checkData()) {
+            Service s = new Service(
+                tbService.getValueAt(index, 0).toString(),
+                nameTF.getText(),
+                Double.parseDouble(priceTF.getText()),
+                Integer.parseInt(quantityTF.getText())
+            );
+            if (serviceClient.updateService(s)) {
+                JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+                clearText();
+                loadDataToTBService();
+            } else {
+                JOptionPane.showMessageDialog(this, "Cập nhật thất bại!");
             }
         }
     }
 
     private void findTFKeyReleased(java.awt.event.KeyEvent evt) {
-        // TODO add your handling code here:
         String s = findTF.getText();
         filler(s);
     } 

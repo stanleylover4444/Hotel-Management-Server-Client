@@ -27,10 +27,6 @@ import dao.BookRoomDAO;
 import dao.OrderDAO;
 import dao.ServiceDetailDAO;
 
-// import dao2.BookRoomDAO;
-// import dao2.OrderDAO;
-// import dao2.ServiceDetailDAO;
-//
 public class GD_ThongKe extends javax.swing.JInternalFrame {
     private final OrderDAO odDAO = new OrderDAO();
     private final BookRoomDAO brDAO = new BookRoomDAO();
@@ -256,7 +252,7 @@ public class GD_ThongKe extends javax.swing.JInternalFrame {
         getContentPane().add(jScrollPane2, java.awt.BorderLayout.PAGE_START);
     } 
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) { 
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) throws SQLException, ClassNotFoundException, ParseException { 
         // TODO add your handling code here:
         bieudo2.add(new JLabel("cjalkcj"));
         int time = -1000, sl = 0;
@@ -335,13 +331,7 @@ public class GD_ThongKe extends javax.swing.JInternalFrame {
         }
         else {
             for (int i = 0; i < list.size(); i++) {
-                try {
-                    tongtien = tongtien + list.get(i).getTongTienDichVu();
-                } catch (SQLException ex) {
-                    Logger.getLogger(GD_ThongKe.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (ClassNotFoundException ex) {
-                    Logger.getLogger(GD_ThongKe.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                tongtien = tongtien + list.get(i).getTongTienPhong();
                 
                 ArrayList<ServiceDetail> list_servicedetail_orderid = srDAO.getListServiceDetailByOrderID(list.get(i).getOrderID());
                 for (ServiceDetail srdt: list_servicedetail_orderid) {

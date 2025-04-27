@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import entity.Customer;
+import entity.CustomerDTO;
 import socket.SocketClient;
 import socket.interfaces.ICustomer;
 
@@ -23,9 +24,17 @@ public class CustomerClient implements ICustomer{
         this.socketClient = new SocketClient("localhost", 31000);
     }
     @Override
-    public List<Customer> getAll() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAll'");
+    public List getAll() {
+        System.out.println("client: getalltbKhachHang");
+        try {
+            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
+            writer.println("getalltbKhachHang");
+            in = new ObjectInputStream(socketClient.getSocket().getInputStream());
+            return (List<CustomerDTO>) in.readObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 
     @Override
@@ -51,14 +60,31 @@ public class CustomerClient implements ICustomer{
 
     @Override
     public boolean update(Customer obj) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'update'");
+        System.out.println("client: updateCustomer");
+        try {
+            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
+            writer.println("updateCustomer");
+            out = new ObjectOutputStream(socketClient.getSocket().getOutputStream());
+            out.writeObject(obj);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public boolean delete(String id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'delete'");
+        System.out.println("client: deleteCustomer");
+        try {
+            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
+            writer.println("deleteCustomer");
+            writer.println(id);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
@@ -84,12 +110,11 @@ public class CustomerClient implements ICustomer{
             writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
             writer.println("getalltbKhachHang");
             in = new ObjectInputStream(socketClient.getSocket().getInputStream());
-            ArrayList<Customer> customers = (ArrayList<Customer>) in.readObject();
-            return customers;
+            return (ArrayList<Customer>) in.readObject();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        throw new UnsupportedOperationException("Unimplemented method 'getalltbKhachHang'");
+        return new ArrayList<>();
     }
 
     @Override

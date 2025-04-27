@@ -41,5 +41,10 @@
 			<artifactId>h2</artifactId>
 			<version>2.2.224</version>
 		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>5.6.15.Final</version> <!-- Use the version compatible with your project -->
+		</dependency>
 	</dependencies>
 </project>

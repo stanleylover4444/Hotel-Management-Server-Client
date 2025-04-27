@@ -3,6 +3,7 @@ package ui;
 
 import entity.Account;
 import entity.Customer;
+import entity.CustomerDTO;
 import entity.Employee;
 import entity.EmployeeType;
 import java.sql.SQLException;
@@ -15,18 +16,19 @@ import javax.swing.JOptionPane;
 import javax.swing.RowFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
-//
+
 import dao.AccountDAO;
 import dao.CustomerDAO;
 import dao.CustomerTypeDAO;
 import dao.EmployeeDAO;
 import dao.EmployeeTypeDAO;
+import socket.implement.CustomerClient;
 
 public class GD_QLKhachHang extends javax.swing.JInternalFrame {
       public static DefaultTableModel modelKhachHang;
     List<RowFilter<DefaultTableModel,Object>> filters = new ArrayList<>();
     private TableRowSorter<DefaultTableModel> tr;
-    private dao.CustomerDAO cD;
+    private CustomerClient cD;
     private dao.AccountDAO accD;
     private CustomerTypeDAO cTD;
     
@@ -36,12 +38,12 @@ public class GD_QLKhachHang extends javax.swing.JInternalFrame {
                 = this.getUI();
         ((javax.swing.plaf.basic.BasicInternalFrameUI) ui).setNorthPane(null);
         initComponents();
-        cD = new CustomerDAO();
+        cD = new CustomerClient();
         this.setFocusable(true);
-        cTD = new CustomerTypeDAO();
+        // cTD = new CustomerTypeDAO();
 
         modelKhachHang=(DefaultTableModel) tblKhachHang.getModel();
-        loadDataToTable(cD.getalltbKhachHang() , modelKhachHang);
+        loadDataToTable(cD.getAll() , modelKhachHang);
     }
 
     @SuppressWarnings("unchecked")
@@ -469,41 +471,33 @@ public class GD_QLKhachHang extends javax.swing.JInternalFrame {
             s=s+"0"+(ma+1);
         return s;
     }
-    private void loadDataToTable(List<Customer> list, DefaultTableModel dtm) {  
+    private void loadDataToTable(List<CustomerDTO> list, DefaultTableModel dtm) {  
         dtm.setRowCount(0);
         accD =new AccountDAO();
-        for (Customer c: list) {
+        for (CustomerDTO c: list) {
             
             Object[] row = {
-                c.getCustomerID(), c.getCustomerName(), c.getCCCD(), c.getGender(),c.getPhone(),c.getCustomerType().getCustomerTypeName(),c.getPoints()
+                c.getCustomerID(), c.getCustomerName(), c.getCCCD(), c.getGender(),c.getPhone(), "VIP",c.getPoints()
             };
             dtm.addRow(row);
         }
     }
     private void btnThemKhachHangActionPerformed(java.awt.event.ActionEvent evt) {
-
-          if(checkData())
-          {
-             
-              try {
-                  Customer c = createEmp();
-                  
-                  if(cD.getCustomerByCCCD(txtCCCD.getText()) == null)
-                  {
-                        cD.add(c);
-                        loadDataToTable(cD.getalltbKhachHang(), modelKhachHang);
-                        clearInput();
-                        JOptionPane.showMessageDialog(this, "Thêm thành công!");
-                  }
-                  else
-                  {
-                      JOptionPane.showMessageDialog(this, "Mã CCCD bị trùng!");
-                  }
-              } catch (Exception e1) {
-                  JOptionPane.showMessageDialog(this, e1.getMessage());
-              }
-          }
-        
+        if (checkData()) {
+            try {
+                Customer c = createEmp();
+                if (cD.getCustomerByCCCD(txtCCCD.getText()) == null) {
+                    cD.add(c);
+                    loadDataToTable(cD.getalltbKhachHang(), modelKhachHang);
+                    clearInput();
+                    JOptionPane.showMessageDialog(this, "Thêm thành công!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Mã CCCD bị trùng!");
+                }
+            } catch (Exception e1) {
+                JOptionPane.showMessageDialog(this, e1.getMessage());
+            }
+        }
     }
 
     private void btnXoaTrangActionPerformed(java.awt.event.ActionEvent evt) {
@@ -512,24 +506,19 @@ public class GD_QLKhachHang extends javax.swing.JInternalFrame {
 
     private void btnSuaThongTinNVActionPerformed(java.awt.event.ActionEvent evt) {
         int index = tblKhachHang.getSelectedRow();
-        if (index==-1){
+        if (index == -1) {
             JOptionPane.showMessageDialog(this, "Hãy chọn khách hàng cần cập nhật!");
-        }
-        else
-        {
-            if(checkData())
-            {
-                Customer c = cD.getCustomerID(tblKhachHang.getValueAt(index, 0).toString());
+        } else {
+            if (checkData()) {
+                Customer c = cD.getById(tblKhachHang.getValueAt(index, 0).toString());
                 c.setCustomerName(txtTenKH.getText());
                 c.setCCCD(txtCCCD.getText());
                 c.setPhone(txtSoDienThoai.getText());
-                c.setGender(radNam.isSelected() ? "Nam": "Nữ");
+                c.setGender(radNam.isSelected() ? "Nam" : "Nữ");
                 try {
                     c.setCustomerType(cTD.findCusByName(cmbLoaiKH.getSelectedItem().toString()));
-                } catch (SQLException ex) {
-                    Logger.getLogger(GD_QLKhachHang.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (ClassNotFoundException ex) {
-                    Logger.getLogger(GD_QLKhachHang.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
                 cD.update(c);
                 loadDataToTable(cD.getalltbKhachHang(), modelKhachHang);
@@ -552,7 +541,7 @@ public class GD_QLKhachHang extends javax.swing.JInternalFrame {
         cmbLoaiKH.setSelectedItem(tblKhachHang.getValueAt(index, 5));
     }
 
-    private void cmbLocLoaiKHActionPerformed(java.awt.event.ActionEvent evt) {
+    private void cmbLocLoaiKHActionPerformed(java.awt.event.ActionEvent evt) throws SQLException {
         
         String s = cmbLocLoaiKH.getSelectedItem().toString();
         if(s.equals("Tất cả"))
@@ -561,20 +550,14 @@ public class GD_QLKhachHang extends javax.swing.JInternalFrame {
         }
         else
         {
-            try {
-                entity.CustomerType cT = cTD.findCusByName(s);
-                if(s.equals("Vip"))
-                {
-                    loadDataToTable(cD.getAllEmpType(cT.getCustomerTypeID()), modelKhachHang);
-                }
-                else
-                {
-                    loadDataToTable(cD.getAllEmpType(cT.getCustomerTypeID()), modelKhachHang);
-                }
-            } catch (SQLException ex) {
-                Logger.getLogger(GD_QLKhachHang.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (ClassNotFoundException ex) {
-                Logger.getLogger(GD_QLKhachHang.class.getName()).log(Level.SEVERE, null, ex);
+            entity.CustomerType cT = cTD.findCusByName(s);
+            if(s.equals("Vip"))
+            {
+                loadDataToTable(cD.getAllEmpType(cT.getCustomerTypeID()), modelKhachHang);
+            }
+            else
+            {
+                loadDataToTable(cD.getAllEmpType(cT.getCustomerTypeID()), modelKhachHang);
             }
         }
        
@@ -605,35 +588,24 @@ public class GD_QLKhachHang extends javax.swing.JInternalFrame {
     }
 
     private void btnXoaActionPerformed(java.awt.event.ActionEvent evt) {
-        // TODO add your handling code here:
         int index = tblKhachHang.getSelectedRow();
-        if(index == -1)
-        {
+        if (index == -1) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần xóa!");
-        }
-        else
-        {
-            if(JOptionPane.showConfirmDialog(this, "Bạn có muốn xóa khách hàng này?", "Cảnh báo", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION)
-            {
-                Customer c = cD.getCustomerID(tblKhachHang.getValueAt(index, 0).toString());
-                if(cD.delete(c))
-                {
+        } else {
+            if (JOptionPane.showConfirmDialog(this, "Bạn có muốn xóa khách hàng này?", "Cảnh báo", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                String customerId = tblKhachHang.getValueAt(index, 0).toString();
+                if (cD.delete(customerId)) {
                     JOptionPane.showMessageDialog(this, "Xóa thành công");
                     clearInput();
                     loadDataToTable(cD.getalltbKhachHang(), modelKhachHang);
-
-                }
-                else
-                {
+                } else {
                     JOptionPane.showMessageDialog(this, "Không thể xóa khách hàng!");
                 }
             }
         }
-        
     }
 
     private void findTFKeyReleased(java.awt.event.KeyEvent evt) {
-        // TODO add your handling code here:
         String f = findTF.getText();
         filter(f);
     }

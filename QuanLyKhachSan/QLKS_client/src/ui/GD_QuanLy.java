@@ -10,7 +10,7 @@ import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
 import javax.swing.UnsupportedLookAndFeelException;
-//
+
 public class GD_QuanLy extends javax.swing.JFrame {
     private static String username;
     private static Component component;

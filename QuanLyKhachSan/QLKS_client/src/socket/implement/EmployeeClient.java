@@ -13,29 +13,29 @@ import entity.Employee;
 import socket.SocketClient;
 import socket.interfaces.IEmployee;
 
-public class EmployeeClient implements IEmployee{
-private SocketClient socketClient;
+public class EmployeeClient implements IEmployee {
+    private SocketClient socketClient;
     private PrintWriter writer;
     private BufferedReader reader;
     private ObjectInputStream in;
     private ObjectOutputStream out;
-    
+
     @SuppressWarnings("resource")
     public EmployeeClient() {
         this.socketClient = new SocketClient("localhost", 31000);
-        // try{
-        //     this.writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
-        //     this.reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream()));
-        //     this.out = new ObjectOutputStream(socketClient.getSocket().getOutputStream());
-        //     this.in = new ObjectInputStream(socketClient.getSocket().getInputStream());
-        // } catch (IOException e) {
-        //     e.printStackTrace();
-        // }
     }
+
     @Override
     public List<Employee> getAll() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAll'");
+        try {
+            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
+            writer.println("get_all_employees");
+            in = new ObjectInputStream(socketClient.getSocket().getInputStream());
+            return (List<Employee>) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -56,50 +56,72 @@ private SocketClient socketClient;
 
     @Override
     public boolean add(Employee obj) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'add'");
+        try {
+            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
+            writer.println("add_employee");
+            out = new ObjectOutputStream(socketClient.getSocket().getOutputStream());
+            out.writeObject(obj);
+            out.flush();
+            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream()));
+            return Boolean.parseBoolean(reader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public boolean update(Employee obj) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'update'");
+        try {
+            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
+            writer.println("update_employee");
+            out = new ObjectOutputStream(socketClient.getSocket().getOutputStream());
+            out.writeObject(obj);
+            out.flush();
+            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream()));
+            return Boolean.parseBoolean(reader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public boolean delete(String id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'delete'");
+        try {
+            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
+            writer.println("delete_employee");
+            writer.println(id);
+            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream()));
+            return Boolean.parseBoolean(reader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public List<Employee> getListEmpQuit() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getListEmpQuit'");
     }
 
     @Override
     public List<Employee> getListEmpStay() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getListEmpStay'");
     }
 
     @Override
     public List<Employee> getListEmpGender(String gender) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getListEmpGender'");
     }
 
     @Override
     public List<Employee> getAllEmpType(String idType) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getAllEmpType'");
     }
 
     @Override
     public Employee findEmpCCCD(String cccd) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'findEmpCCCD'");
     }
-
 }

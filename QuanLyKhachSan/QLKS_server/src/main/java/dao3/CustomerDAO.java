@@ -5,6 +5,7 @@ import entity.CustomerType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CustomerDAO {
@@ -21,7 +22,8 @@ public class CustomerDAO {
     }
 
     public List<Customer> getAllCustomers() {
-        return entityManager.createQuery("SELECT c FROM Customer c", Customer.class).getResultList();
+        List<Customer> customers = entityManager.createQuery("SELECT c FROM Customer c", Customer.class).getResultList();
+        return customers; // Convert to standard Java collection
     }
 
     public boolean update(Customer c) {

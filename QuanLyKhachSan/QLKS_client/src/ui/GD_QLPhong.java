@@ -106,7 +106,7 @@ public class GD_QLPhong extends javax.swing.JInternalFrame {
     }
  
     private boolean checkData() {
-        if(txtTenPhong.getText().isBlank() || txtGia.getText().isBlank() ) {
+        if(txtTenPhong.getText().trim().isEmpty() || txtGia.getText().trim().isEmpty() ) {
             JOptionPane.showMessageDialog(this, "Hãy nhập đầy đủ thông tin!");
             return false;
         } else {
@@ -643,40 +643,40 @@ public class GD_QLPhong extends javax.swing.JInternalFrame {
     }
 
     private void btnTimKiemMouseReleased(java.awt.event.MouseEvent evt) { 
-        // TODO add your handling code here:
-        if( txtMaPhongTK.getText().isBlank() ){
-            String status = (String) cbbTrangThaiTK.getSelectedItem();
-            String type = (String) cbbLoaiPhongTK.getSelectedItem(); 
-            
-            jPanel4.removeAll();
-            for( UI_Phong u : ds_UIPhong ) {
-                String roomType = u.getRoom().getRoomType().getRoomTypeName(); 
-                String roomStatus = u.getRoom().getRoomStatusType().getRoomStatusTypeName();  
-                if( (type.equalsIgnoreCase(roomType) || type.equalsIgnoreCase("Tất cả")) 
-                     && (status.equalsIgnoreCase(roomStatus) || status.equalsIgnoreCase("Tất cả")) )
-                    jPanel4.add(u); 
-            }
-            jPanel4.revalidate();  
-            jPanel4.repaint(); 
-        } 
-        
-         
-        else {
-            cbbTrangThaiTK.setSelectedIndex(0);
-            cbbLoaiPhongTK.setSelectedIndex(0);
-            jPanel4.removeAll();
-            for( UI_Phong u : ds_UIPhong ) {
-                if( u.getRoom().getRoomID().equals(txtMaPhongTK.getText()) ){
-                    jPanel4.add(u); 
-                    break; 
-                } 
-            }
-            jPanel4.revalidate();  
-            jPanel4.repaint();  
+    try {
+        String roomId = txtMaPhongTK.getText().trim();
+        String status = null;
+        String type = null;
+
+        switch (cbbTrangThaiTK.getSelectedIndex()) {
+            case 0: status = null; break; // Tất cả
+            case 1: status = "LTTP001"; break; // Trống
+            case 2: status = "LTTP002"; break; // Đang sử dụng
+            case 3: status = "LTTP003"; break; // Đã đặt
+            case 4: status = "LTTP004"; break; // Bảo trì
+            case 5: status = "LTTP005"; break; // Dọn dẹp
         }
-        
-        
-    } 
+
+        switch (cbbLoaiPhongTK.getSelectedIndex()) {
+            case 0: type = null; break; // Tất cả
+            case 1: type = "LP001"; break; // Giường đơn
+            case 2: type = "LP002"; break; // Giường đôi
+            case 3: type = "LP003"; break; // Giường đôi lớn
+        }
+
+        List<Room> filteredRooms = roomClient.searchRooms(roomId, type, status);
+
+        jPanel4.removeAll();
+        for (Room room : filteredRooms) {
+            UI_Phong uiPhong = new UI_Phong(room);
+            jPanel4.add(uiPhong);
+        }
+        jPanel4.revalidate();
+        jPanel4.repaint();
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm phòng: " + e.getMessage());
+    }
+} 
 
     private void txtGiaActionPerformed(java.awt.event.ActionEvent evt) { 
         // TODO add your handling code here:
@@ -686,7 +686,6 @@ public class GD_QLPhong extends javax.swing.JInternalFrame {
     
     private void btnLuuMouseReleased(java.awt.event.MouseEvent evt) { 
         
-        if(checkData()) {
             try {
                 Room phong = new Room(); 
                 phong.setRoomID(txtMaPhong.getText());
@@ -707,11 +706,11 @@ public class GD_QLPhong extends javax.swing.JInternalFrame {
                 else if(status.equals("Bảo trì")) IDstatus = "LTTP004"; 
                 else if(status.equals("Dọn dẹp")) IDstatus = "LTTP005"; 
 
-
                 double price = Double.parseDouble(txtGia.getText()); 
 
                 phong.setRoomStatusType(new RoomStatusType(IDstatus, status));
                 phong.setRoomType(new RoomType(IDtype, type, price));
+                System.err.println("phong" + phong);
 
                 if(btnLuu.getText().equals("Lưu"))
                     new RoomClient().add(phong); 
@@ -727,7 +726,7 @@ public class GD_QLPhong extends javax.swing.JInternalFrame {
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, e.getMessage());
             }
-        }
+        
     } 
 
     private void btnXoaPhongActionPerformed(java.awt.event.ActionEvent evt) { 

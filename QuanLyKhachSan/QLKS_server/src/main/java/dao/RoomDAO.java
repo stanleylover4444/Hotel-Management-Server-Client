@@ -186,4 +186,24 @@ public class RoomDAO {
             Logger.getLogger(RoomDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    public List<Room> findRoomsByName(String roomName) {
+        List<Room> rooms = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.opConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM Room WHERE roomName LIKE ?")) {
+            pstmt.setString(1, "%" + roomName + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    RoomType roomType = roomTypeDAO.findRoomTypeById(rs.getString("roomtypeid"));
+                    RoomStatusType roomStatusType = roomStatusTypeDAO.finRoomStatusTypeById(rs.getString("roomstatustypeid"));
+                    Room room = new Room(rs.getString("roomid"), rs.getString("roomName"), roomType, roomStatusType, rs.getString("describe"));
+                    rooms.add(room);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("findRoomsByName(): Error while searching rooms");
+            e.printStackTrace();
+        }
+        return rooms;
+    }
 }

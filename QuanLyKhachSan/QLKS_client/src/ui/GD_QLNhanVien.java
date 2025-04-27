@@ -4,6 +4,8 @@ package ui;
 import entity.Account;
 import entity.Employee;
 import entity.EmployeeType;
+import socket.implement.EmployeeClient;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +26,8 @@ public class GD_QLNhanVien extends javax.swing.JInternalFrame {
 
     List<RowFilter<DefaultTableModel,Object>> filters = new ArrayList<>();
     private TableRowSorter<DefaultTableModel> tr;
-    private dao.EmployeeDAO eD;
-    private dao.AccountDAO accD;
     private EmployeeTypeDAO eTD;
+    private socket.implement.EmployeeClient employeeClient;
     
     public GD_QLNhanVien() {
         this.setRootPaneCheckingEnabled(false);
@@ -34,12 +35,11 @@ public class GD_QLNhanVien extends javax.swing.JInternalFrame {
                 = this.getUI();
         ((javax.swing.plaf.basic.BasicInternalFrameUI) ui).setNorthPane(null);
         initComponents();
-        eD = new EmployeeDAO();
+        employeeClient = new EmployeeClient();
         this.setFocusable(true);
-        eTD = new EmployeeTypeDAO();
 
         modelNhanVien=(DefaultTableModel) tblNhanVien.getModel();
-        loadDataToTable(eD.getAllList(), modelNhanVien);  
+        loadDataToTable(employeeClient.getAll(), modelNhanVien);  
     }
 
     @SuppressWarnings("unchecked")
@@ -500,15 +500,15 @@ public class GD_QLNhanVien extends javax.swing.JInternalFrame {
         String phone = txtSoDienThoai.getText();
         String salary = txtLuongCoBan.getText();
         String gender = radNam.isSelected() ? "Nam" : "Nữ";
-        EmployeeTypeDAO etD = new EmployeeTypeDAO();
-        entity.EmployeeType et = etD.findEmpByName(cmbChucVu.getSelectedItem().toString());
+        // EmployeeTypeDAO etD = new EmployeeTypeDAO();
+        // entity.EmployeeType et = etD.findEmpByName(cmbChucVu.getSelectedItem().toString());
         String email = name.toLowerCase().trim() + "@gmail.com";
-        entity.Employee e = new Employee(setMaNV(), name, iden, phone, email, Double.parseDouble(salary),  et, gender);
+        entity.Employee e = new Employee(setMaNV(), name, iden, phone, email, Double.parseDouble(salary),  null, gender);
         return e;
     }
      private String setMaNV(){
         String s="NV";
-        int ma= eD.getAllList().size();
+        int ma= employeeClient.getAll().size();
         if (ma<9)
             s=s+ "00"+ (ma+1);
         else
@@ -517,16 +517,12 @@ public class GD_QLNhanVien extends javax.swing.JInternalFrame {
     }
     private void loadDataToTable(List<Employee> list, DefaultTableModel dtm) {  
         dtm.setRowCount(0);
-        accD =new AccountDAO();
-        for (Employee s: list) {
+        for (Employee s : list) {
             String taiKhoan = "Chưa có";
-            if (accD.getAccountById(s.getEmployeeID()) != null )
-                if (!s.getEmployeeType().getEmployeeTypeName().equals("LNV002"))
-                    taiKhoan="Ä�Ã£ khÃ³a";
-                else
-                    taiKhoan=s.getEmployeeID();
             Object[] row = {
-                s.getEmployeeID(), s.getEmployeeName(), s.getCCCD(), s.getGender(),s.getPhone(),s.getEmployeeType().getEmployeeTypeName(),s.getSalary(),taiKhoan
+                s.getEmployeeID(), s.getEmployeeName(), s.getCCCD(), s.getGender(), s.getPhone(),
+                s.getEmployeeType() != null ? s.getEmployeeType().getEmployeeTypeName() : "N/A",
+                s.getSalary(), taiKhoan
             };
             dtm.addRow(row);
         }
@@ -538,16 +534,12 @@ public class GD_QLNhanVien extends javax.swing.JInternalFrame {
              
               try {
                   Employee e = createEmp();
-                  if(eD.findEmpCCCD(txtCMND.getText()) == null)
-                  {
-                        eD.add(e);
-                        loadDataToTable(eD.getAllList(), modelNhanVien);
-                        clearInput();
-                        JOptionPane.showMessageDialog(this, "Thêm thành công!");
-                  }
-                  else
-                  {
-                      JOptionPane.showMessageDialog(this, "Mã CCCD bị trùng!");
+                  if (employeeClient.add(e)) {
+                      loadDataToTable(employeeClient.getAll(), modelNhanVien);
+                      clearInput();
+                      JOptionPane.showMessageDialog(this, "Thêm thành công!");
+                  } else {
+                      JOptionPane.showMessageDialog(this, "Thêm thất bại!");
                   }
               } catch (Exception e1) {
                   JOptionPane.showMessageDialog(this, e1.getMessage());
@@ -569,23 +561,20 @@ public class GD_QLNhanVien extends javax.swing.JInternalFrame {
         {
             if(checkData())
             {
-                Employee e = eD.findEmpID(tblNhanVien.getValueAt(index, 0).toString());
+                Employee e = employeeClient.getAll().get(index);
                 e.setEmployeeName(txtTenNhanVien.getText());
                 e.setCCCD(txtCMND.getText());
                 e.setPhone(txtSoDienThoai.getText());
                 e.setGender(radNam.isSelected() ? "Nam": "Nữ");
                 e.setSalary(Double.parseDouble(txtLuongCoBan.getText()));
-                try {
-                    e.setEmployeeType(eTD.findEmpByName(cmbChucVu.getSelectedItem().toString()));
-                } catch (SQLException ex) {
-                    Logger.getLogger(GD_QLNhanVien.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (ClassNotFoundException ex) {
-                    Logger.getLogger(GD_QLNhanVien.class.getName()).log(Level.SEVERE, null, ex);
+                e.setEmployeeType(eTD.findEmpByName(cmbChucVu.getSelectedItem().toString()));
+                if (employeeClient.update(e)) {
+                    loadDataToTable(employeeClient.getAll(), modelNhanVien);
+                    clearInput();
+                    JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Cập nhật thất bại!");
                 }
-                eD.update(e);
-                loadDataToTable(eD.getAllList(), modelNhanVien);
-                clearInput();
-                JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
             }
         }
     }
@@ -606,29 +595,23 @@ public class GD_QLNhanVien extends javax.swing.JInternalFrame {
         
     } 
 
-    private void cmbLocChucVuActionPerformed(java.awt.event.ActionEvent evt) { 
+    private void cmbLocChucVuActionPerformed(java.awt.event.ActionEvent evt) throws ClassNotFoundException { 
         
         String s = cmbLocChucVu.getSelectedItem().toString();
         if(s.equals("Tất cả"))
         {
-            loadDataToTable(eD.getAllList(), modelNhanVien);
+            loadDataToTable(employeeClient.getAll(), modelNhanVien);
         }
         else
         {
-            try {
-                EmployeeType e = eTD.findEmpByName(s);
-                if(s.equals("Thu ngân"))
-                {
-                    loadDataToTable(eD.getAllEmpType(e.getEmployeeTypeID()), modelNhanVien);
-                }
-                else
-                {
-                    loadDataToTable(eD.getAllEmpType(e.getEmployeeTypeID()), modelNhanVien);
-                }
-            } catch (SQLException ex) {
-                Logger.getLogger(GD_QLNhanVien.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (ClassNotFoundException ex) {
-                Logger.getLogger(GD_QLNhanVien.class.getName()).log(Level.SEVERE, null, ex);
+            EmployeeType e = eTD.findEmpByName(s);
+            if(s.equals("Thu ngân"))
+            {
+                loadDataToTable(employeeClient.getAll(), modelNhanVien);
+            }
+            else
+            {
+                loadDataToTable(employeeClient.getAll(), modelNhanVien);
             }
         }
        
@@ -640,14 +623,14 @@ public class GD_QLNhanVien extends javax.swing.JInternalFrame {
         String s= cmbLocGioiTinh.getSelectedItem().toString();
         if(s.equals("Tất cả"))
         {
-            loadDataToTable(eD.getAllList(), modelNhanVien);
+            loadDataToTable(employeeClient.getAll(), modelNhanVien);
         }
         else
         {
             if(s.equals("Nam"))
-                loadDataToTable(eD.getListEmpGender(s), modelNhanVien);
+                loadDataToTable(employeeClient.getAll(), modelNhanVien);
             else
-                loadDataToTable(eD.getListEmpGender(s), modelNhanVien);
+                loadDataToTable(employeeClient.getAll(), modelNhanVien);
         }
 
             
@@ -669,11 +652,11 @@ public class GD_QLNhanVien extends javax.swing.JInternalFrame {
                 
                 int choose = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn tạo tài khoản cho nhân viên này?", "Há»�i", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if (choose == JOptionPane.YES_OPTION) {
-                    Employee e = eD.findEmpID(modelNhanVien.getValueAt(index, 0)+"");
+                    Employee e = employeeClient.getAll().get(index);
                     String taiKhoan= e.getEmployeeID();
                     Account a=new Account(taiKhoan,"123456");
-                    accD.insertAccount(a);
-                    loadDataToTable(eD.getAllList(), modelNhanVien);
+                    employeeClient.add(e);
+                    loadDataToTable(employeeClient.getAll(), modelNhanVien);
                     JOptionPane.showMessageDialog(this, "Tạo thành công! \n Username: " + taiKhoan+"\n Pass: 123456");
                     clearInput();
                 }
@@ -695,39 +678,13 @@ public class GD_QLNhanVien extends javax.swing.JInternalFrame {
         }
         else
         {
-            if(modelNhanVien.getValueAt(index, 7) != "Chưa có"){
-                if(JOptionPane.showConfirmDialog(this, "HBạn có chắc muốn xóa tài khỏa nhân viên này?", "Cảnh báo", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION)
-                {
-                    Employee e = eD.findEmpID(tblNhanVien.getValueAt(index, 0).toString());
-                    accD.delete(accD.getAccountById(tblNhanVien.getValueAt(index, 0).toString()));
-                    if(eD.delete(e))
-                    {
-                        JOptionPane.showMessageDialog(this, "Xóa thành công");
-                        clearInput();
-                        loadDataToTable(eD.getAllList(), modelNhanVien);
-                    }
-                    else
-                    {
-                        JOptionPane.showMessageDialog(this, "Không thể xóa nhân viên!");
-                    }
-                }
-            }
-            else
-            {
-                if(JOptionPane.showConfirmDialog(this, "Bạn có muốn xóa nhân viên này không?", "Cảnh báo", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION)
-                {
-                    Employee e = eD.findEmpID(tblNhanVien.getValueAt(index, 0).toString());
-                    if(eD.delete(e))
-                    {
-                        JOptionPane.showMessageDialog(this, "Xóa thành công");
-                        clearInput();
-                        loadDataToTable(eD.getAllList(), modelNhanVien);
-                    }
-                    else
-                    {
-                        JOptionPane.showMessageDialog(this, "Không thể xóa nhân viên!");
-                    }
-                }
+            String employeeId = tblNhanVien.getValueAt(index, 0).toString();
+            if (employeeClient.delete(employeeId)) {
+                loadDataToTable(employeeClient.getAll(), modelNhanVien);
+                clearInput();
+                JOptionPane.showMessageDialog(this, "Xóa thành công!");
+            } else {
+                JOptionPane.showMessageDialog(this, "Xóa thất bại!");
             }
         }
         

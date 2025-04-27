@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.List;
 
@@ -57,35 +58,49 @@ public class RoomClient implements IRoom{
         }
         throw new UnsupportedOperationException("Unimplemented method 'getById'");
     }
-
-    @Override
-    public boolean add(Room obj) {
-        System.out.println("client: add");
-        try {
-            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
-            writer.println("addRoom");
-            out = new ObjectOutputStream(socketClient.getSocket().getOutputStream());
-            System.out.println(obj);
-            out.writeObject(obj);
-            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream()));
-            return Boolean.parseBoolean(reader.readLine());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-			e.printStackTrace();
-		}
-        throw new UnsupportedOperationException("Unimplemented method 'add'");
-    }
-
+    
     @Override
     public boolean update(Room obj) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'update'");
+        System.out.println("client: update room");
+        try {
+            // Send "update_room" command to server
+            writer = new PrintWriter(new OutputStreamWriter(socketClient.getSocket().getOutputStream(), "UTF-8"), true);
+            writer.println("update_room");
+
+            // Send individual room details
+            writer.println(obj.getRoomID() != null ? obj.getRoomID() : "");
+            writer.println(obj.getRoomName() != null ? obj.getRoomName() : "");
+            writer.println(obj.getRoomType() != null ? obj.getRoomType().getRoomTypeID() : "");
+            writer.println(obj.getRoomStatusType() != null ? obj.getRoomStatusType().getRoomStatusTypeID() : "");
+            writer.println(obj.getDescription() != null ? obj.getDescription() : "");
+
+            // Read response from server
+            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream(), "UTF-8"));
+            boolean result = Boolean.parseBoolean(reader.readLine());
+            System.out.println("client: update result: " + result);
+            return result;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public boolean delete(String id) {
-        // TODO Auto-generated method stub
+        System.out.println("client: delete room");
+        try {
+            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
+            writer.println("delete_room"); // Command to indicate delete operation
+            writer.println(id); // Send the ID of the room to delete
+            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream()));
+            boolean result = Boolean.parseBoolean(reader.readLine());
+            System.out.println("client: delete result: " + result);
+            return result;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         throw new UnsupportedOperationException("Unimplemented method 'delete'");
     }
 
@@ -93,11 +108,10 @@ public class RoomClient implements IRoom{
     public List<Room> findRoomByIDLoaiPhong(String IDLoaiPhong) {
         System.out.println("client: findRoomByIDLoaiPhong");
         try{
-            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
+            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true, java.nio.charset.StandardCharsets.UTF_8);
             writer.println("findRoomByIDLoaiPhong");
             writer.println(IDLoaiPhong);
-            in = new ObjectInputStream(socketClient.getSocket().getInputStream());
-            List<Room> rooms = (List<Room>) in.readObject();
+            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream(), "UTF-8"));            List<Room> rooms = (List<Room>) in.readObject();
             return rooms;
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -119,16 +133,57 @@ public class RoomClient implements IRoom{
     public String getMaPhong() {
         System.out.println("client: getMaPhong");
         try {
-            writer = new PrintWriter(socketClient.getSocket().getOutputStream(), true);
+            writer = new PrintWriter(new OutputStreamWriter(socketClient.getSocket().getOutputStream(), "UTF-8"), true);
             writer.println("getMaPhong");
-            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream()));
-            String maPhong = reader.readLine();
+            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream(), "UTF-8"));            String maPhong = reader.readLine();
             System.out.println("client: maPhong: " + maPhong);
             return maPhong;
         } catch ( IOException e) {
             e.printStackTrace();
         }
         throw new UnsupportedOperationException("Unimplemented method 'getMaPhong'");
+    }
+    @Override
+    public boolean add(Room obj) {
+        System.out.println("client: add room");
+        try {
+            // Send "add_room" command to server
+            writer = new PrintWriter(new OutputStreamWriter(socketClient.getSocket().getOutputStream(), "UTF-8"), true);
+            writer.println("add_room");
+
+            // Send individual room details
+            writer.println(obj.getRoomID() != null ? obj.getRoomID() : "");
+            writer.println(obj.getRoomName() != null ? obj.getRoomName() : "");
+            writer.println(obj.getRoomType() != null ? obj.getRoomType().getRoomTypeID() : "");
+            writer.println(obj.getRoomStatusType() != null ? obj.getRoomStatusType().getRoomStatusTypeID() : "");
+            writer.println(obj.getDescription() != null ? obj.getDescription() : "");
+
+            // Read response from server
+            reader = new BufferedReader(new InputStreamReader(socketClient.getSocket().getInputStream(), "UTF-8"));
+            boolean result = Boolean.parseBoolean(reader.readLine());
+            System.out.println("client: add result: " + result);
+            return result;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public List<Room> searchRooms(String roomId, String roomType, String roomStatus) {
+        System.out.println("client: search rooms (" + roomId + ", " + roomType + ", " + roomStatus + ")");
+        try {
+            writer = new PrintWriter(new OutputStreamWriter(socketClient.getSocket().getOutputStream(), java.nio.charset.StandardCharsets.UTF_8), true);
+            writer.println("search_rooms");
+            writer.println(roomId != null ? roomId : "");
+            writer.println(roomType != null ? roomType : "");
+            writer.println(roomStatus != null ? roomStatus : "");
+
+            in = new ObjectInputStream(socketClient.getSocket().getInputStream());
+            return (List<Room>) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        throw new UnsupportedOperationException("Unimplemented method 'searchRooms'");
     }
 
 }
