@@ -86,7 +86,7 @@ public class AccountClient implements IAccount{
         }
         return false;
     }
-
+//Đng suy nghi lai
     @Override
     public boolean checkLogin(String username, String password) {
         // TODO Auto-generated method stub
