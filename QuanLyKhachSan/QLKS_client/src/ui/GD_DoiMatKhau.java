@@ -16,7 +16,7 @@ public class GD_DoiMatKhau extends javax.swing.JFrame {
         this.setAlwaysOnTop(true);
         initComponents();
         aD = new AccountDAO();
-    }//
+    }
 
     @SuppressWarnings("unchecked")
     private void initComponents() {

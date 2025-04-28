@@ -12,7 +12,7 @@ public class GD_GioiThieu extends javax.swing.JInternalFrame {
         this.setFocusable(true);
         username=_username;
     }
-//
+
     @SuppressWarnings("unchecked")
     private void initComponents() {
 
